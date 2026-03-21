@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>User Management - Library System</title>
+<style>
+/* ----------------- GLOBAL ----------------- */
+body { font-family: Arial, Helvetica, sans-serif; background: #f4f6f9; margin:0; }
+.sidebar{ width:220px; height:100vh; background:#4e73df; position:fixed; color:white; padding-top:20px;}
+.sidebar h2{ text-align:center; margin-bottom:30px;}
+.sidebar a{ display:block; color:white; padding:12px 20px; text-decoration:none; margin-bottom:5px; border-radius:5px;}
+.sidebar a:hover{ background:#2e59d9;}
+.topbar{ margin-left:220px; background:white; padding:15px 30px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;}
+.logout-btn{ background:#e74a3b; color:white; padding:8px 15px; text-decoration:none; border-radius:5px;}
+.logout-btn:hover{ background:#c0392b;}
+.content{ margin-left:220px; padding:30px;}
+.add-btn{ display:inline-block; padding:10px 15px; background:#1cc88a; color:white; text-decoration:none; border-radius:5px; margin-bottom:15px; cursor:pointer;}
+.add-btn:hover{ background:#17a673;}
+table{ width:100%; border-collapse:collapse; text-align:left; background:white; border-radius:8px; overflow:visible; box-shadow:0 5px 10px rgba(0,0,0,0.1);}
+th, td{ padding:12px; border-bottom:1px solid #ddd; position:relative;}
+th{ background:#4e73df; color:white;}
+tr:hover{ background:#f1f1f1;}
+.dropdown{ position: relative; display: inline-block;}
+.dropbtn{ background:#4e73df; color:white; padding:5px 10px; font-size:14px; border:none; border-radius:5px; cursor:pointer;}
+.dropbtn:hover{ background:#2e59d9;}
+.dropdown-content{ display: none; position: absolute; background-color: #fff; min-width: 160px; box-shadow: 0px 5px 10px rgba(0,0,0,0.2); border-radius:5px; z-index:9999; top:35px; left:0;}
+.dropdown-content a{ color: #333; padding: 8px 12px; text-decoration: none; display: block; border-bottom: 1px solid #f1f1f1; cursor:pointer;}
+.dropdown-content a:hover{ background-color: #f1f1f1;}
+
+/* ----------------- MODAL ----------------- */
+.modal{ display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background-color: rgba(0,0,0,0.5);}
+.modal-content{ background:white; margin:8% auto; padding:30px; border-radius:10px; width:400px; box-shadow:0px 10px 25px rgba(0,0,0,0.3); position:relative;}
+.modal-content h2{ text-align:center; color:#4e73df; margin-bottom:20px;}
+.modal-content input, .modal-content select{ width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;}
+.modal-content button{ width:100%; padding:12px; background:#1cc88a; border:none; border-radius:5px; color:white; font-size:16px; cursor:pointer; margin-top:10px;}
+.modal-content button:hover{ background:#17a673;}
+.close{ position:absolute; top:15px; right:20px; font-size:24px; font-weight:bold; color:#333; cursor:pointer;}
+.modal-delete button{ background:#e74a3b;}
+.modal-delete button:hover{ background:#c0392b;}
+</style>
+</head>
+<body>
+
+<!-- ----------------- SIDEBAR ----------------- -->
+<div class="sidebar">
+  <h2>Library</h2>
+  <a href="/dashboard">Dashboard</a>
+  <a href="/books">Books</a>
+  <a href="/borrowed">Borrowed Books</a>
+  <a href="/users">User Management</a>
+  <a href="/reports">Reports</a>
+</div>
+
+<!-- ----------------- TOPBAR ----------------- -->
+<div class="topbar">
+  <div>Welcome <b>{{ name }}</b></div>
+  <div><a class="logout-btn" href="/logout">Logout</a></div>
+</div>
+
+<!-- ----------------- CONTENT ----------------- -->
+<div class="content">
+  <h2>User Management</h2>
+  <span class="add-btn" id="openAddUserModal">+ Add New User</span>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.name }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.role }}</td>
+        <td>
+          <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown(event)">Options</button>
+            <div class="dropdown-content">
+              <a href="javascript:void(0);" onclick="openEditUserModal('{{u.id}}','{{u.name}}','{{u.email}}','{{u.role}}')">Edit</a>
+              <a href="javascript:void(0);" onclick="openResetPasswordModal('{{u.id}}','{{u.name}}')">Reset Password</a>
+              <a href="javascript:void(0);" onclick="openDeleteUserModal('{{u.id}}','{{u.name}}')">Delete</a>
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ----------------- MODALS ----------------- -->
+
+<!-- Add User -->
+<div id="addUserModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeAddUserModal">&times;</span>
+    <h2>Add New User</h2>
+    <form method="POST" action="/users/add">
+      <input type="text" name="name" placeholder="Full Name" required>
+      <input type="email" name="email" placeholder="Email Address" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <select name="role" required>
+        <option value="">Select Role</option>
+        <option value="Admin">Admin</option>
+        <option value="Librarian">Librarian</option>
+        <option value="Member">Member</option>
+      </select>
+      <button type="submit">Add User</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit User -->
+<div id="editUserModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeEditUserModal">&times;</span>
+    <h2>Edit User</h2>
+    <form id="editUserForm" method="POST">
+      <input type="hidden" name="id" id="editUserId">
+      <input type="text" name="name" id="editUserName" placeholder="Full Name" required>
+      <input type="email" name="email" id="editUserEmail" placeholder="Email Address" required>
+      <select name="role" id="editUserRole" required>
+        <option value="">Select Role</option>
+        <option value="Admin">Admin</option>
+        <option value="Librarian">Librarian</option>
+        <option value="Member">Member</option>
+      </select>
+      <button type="submit">Update User</button>
+    </form>
+  </div>
+</div>
+
+<!-- Reset Password -->
+<div id="resetPasswordModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeResetPasswordModal">&times;</span>
+    <h2>Reset Password</h2>
+    <form id="resetPasswordForm" method="POST">
+      <input type="hidden" name="id" id="resetUserId">
+      <input type="password" name="new_password" placeholder="New Password" required>
+      <button type="submit">Reset Password</button>
+    </form>
+  </div>
+</div>
+
+<!-- Delete User -->
+<div id="deleteUserModal" class="modal">
+  <div class="modal-content modal-delete">
+    <span class="close" id="closeDeleteUserModal">&times;</span>
+    <h2>Delete User</h2>
+    <p id="deleteUserMessage"></p>
+    <form id="deleteUserForm" method="POST">
+      <input type="hidden" name="id" id="deleteUserId">
+      <button type="submit">Delete</button>
+    </form>
+  </div>
+</div>
+
+<!-- ----------------- SCRIPT ----------------- -->
+<script>
+  // Modals
+  const addUserModal = document.getElementById('addUserModal');
+  const editUserModal = document.getElementById('editUserModal');
+  const resetPasswordModal = document.getElementById('resetPasswordModal');
+  const deleteUserModal = document.getElementById('deleteUserModal');
+
+  document.getElementById('openAddUserModal').onclick = () => addUserModal.style.display='block';
+  document.getElementById('closeAddUserModal').onclick = () => addUserModal.style.display='none';
+  document.getElementById('closeEditUserModal').onclick = () => editUserModal.style.display='none';
+  document.getElementById('closeResetPasswordModal').onclick = () => resetPasswordModal.style.display='none';
+  document.getElementById('closeDeleteUserModal').onclick = () => deleteUserModal.style.display='none';
+
+  // Edit User
+  function openEditUserModal(id, name, email, role){
+    document.getElementById('editUserId').value = id;
+    document.getElementById('editUserName').value = name;
+    document.getElementById('editUserEmail').value = email;
+    document.getElementById('editUserRole').value = role;
+    document.getElementById('editUserForm').action = `/users/edit/${id}`;
+    editUserModal.style.display = 'block';
+  }
+
+  // Reset Password
+  function openResetPasswordModal(id, name){
+    document.getElementById('resetUserId').value = id;
+    document.getElementById('resetPasswordForm').action = `/users/reset_password/${id}`;
+    resetPasswordModal.style.display = 'block';
+  }
+
+  // Delete User
+  function openDeleteUserModal(id, name){
+    document.getElementById('deleteUserId').value = id;
+    document.getElementById('deleteUserMessage').innerText = `Are you sure you want to delete user '${name}'?`;
+    document.getElementById('deleteUserForm').action = `/users/delete/${id}`;
+    deleteUserModal.style.display = 'block';
+  }
+
+  // Close on outside click
+  window.onclick = function(event){
+    [addUserModal, editUserModal, resetPasswordModal, deleteUserModal].forEach(mod=>{
+      if(event.target==mod) mod.style.display='none';
+    });
+  }
+
+  // Dropdown
+  function toggleDropdown(event){
+    event.stopPropagation();
+    const dropdown = event.currentTarget.nextElementSibling;
+    document.querySelectorAll('.dropdown-content').forEach(dd=>{if(dd!==dropdown) dd.style.display='none';});
+    dropdown.style.display = dropdown.style.display==='block'?'none':'block';
+  }
+  window.addEventListener('click',()=>{document.querySelectorAll('.dropdown-content').forEach(dd=>dd.style.display='none');});
+</script>
+
+</body>
+</html>

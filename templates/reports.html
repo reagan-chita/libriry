@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Library Reports</title>
+    <style>
+        body { font-family: Arial, sans-serif; background:#f4f6f9; margin:0; padding:0;}
+        .sidebar{ width:220px; height:100vh; background:#4e73df; position:fixed; color:white; padding-top:20px;}
+        .sidebar h2{text-align:center;margin-bottom:30px;}
+        .sidebar a{ display:block;color:white;padding:12px 20px;text-decoration:none;}
+        .sidebar a:hover{ background:#2e59d9;}
+        .topbar{ margin-left:220px; background:white; padding:15px 30px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+        .logout-btn{ background:#e74a3b; color:white; padding:8px 15px; text-decoration:none; border-radius:5px;}
+        .logout-btn:hover{ background:#c0392b;}
+        .content{ margin-left:220px; padding:30px;}
+        table{ width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow:0 5px 10px rgba(0,0,0,0.1);}
+        th, td{ padding:12px; border-bottom:1px solid #ddd;}
+        th{ background:#4e73df; color:white;}
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Library</h2>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/books">Books</a>
+    <a href="/reports">Reports</a>
+</div>
+
+<div class="topbar">
+    <div>Welcome <b>{{ name }}</b></div>
+    <div><a class="logout-btn" href="/logout">Logout</a></div>
+</div>
+
+<div class="content">
+    <h2>Library Reports</h2>
+    
+    <p><strong>Total Books:</strong> {{ total_books }}</p>
+    <p><strong>Total Borrowed:</strong> {{ total_borrowed }}</p>
+    <p><strong>Available Books:</strong> {{ total_available }}</p>
+
+    <h3>Borrowed Books Details</h3>
+    <table>
+        <tr>
+            <th>Book Title</th>
+            <th>Borrower</th>
+            <th>Borrow Date</th>
+        </tr>
+        {% for b in borrowed_list %}
+        <tr>
+            <td>{{ b.book.title }}</td>
+            <td>{{ b.user.name }}</td> 
+            <td>{{ b.borrow_date }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+</body>
+</html>

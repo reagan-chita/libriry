@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Books List - Library System</title>
+<style>
+/* Global Styles */
+body { font-family: Arial, Helvetica, sans-serif; background: #f4f6f9; margin:0; }
+.sidebar{ width:220px; height:100vh; background:#4e73df; position:fixed; color:white; padding-top:20px;}
+.sidebar h2{ text-align:center; margin-bottom:30px;}
+.sidebar a{ display:block; color:white; padding:12px 20px; text-decoration:none;}
+.sidebar a:hover{ background:#2e59d9;}
+.topbar{ margin-left:220px; background:white; padding:15px 30px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;}
+.logout-btn{ background:#e74a3b; color:white; padding:8px 15px; text-decoration:none; border-radius:5px;}
+.logout-btn:hover{ background:#c0392b;}
+.content{ margin-left:220px; padding:30px;}
+.add-btn{ display:inline-block; padding:10px 15px; background:#1cc88a; color:white; text-decoration:none; border-radius:5px; margin-bottom:15px; cursor:pointer;}
+.add-btn:hover{ background:#17a673;}
+.tabs { margin-bottom: 20px; }
+.tab-btn { padding:10px 20px; cursor:pointer; border:none; background:#e0e0e0; border-radius:5px 5px 0 0; margin-right:5px; }
+.tab-btn.active { background:#4e73df; color:white; }
+table{ width:100%; border-collapse:collapse; text-align:left; background:white; border-radius:8px; overflow:visible; box-shadow:0 5px 10px rgba(0,0,0,0.1);}
+th, td{ padding:12px; border-bottom:1px solid #ddd; position:relative;}
+th{ background:#4e73df; color:white;}
+tr:hover{ background:#f1f1f1;}
+.dropdown{ position: relative; display: inline-block;}
+.dropbtn{ background:#4e73df; color:white; padding:5px 10px; font-size:14px; border:none; border-radius:5px; cursor:pointer;}
+.dropbtn:hover{ background:#2e59d9;}
+.dropdown-content{ display: none; position: absolute; background-color: #fff; min-width: 140px; box-shadow: 0px 5px 10px rgba(0,0,0,0.2); border-radius:5px; z-index:9999; top:35px; left:0;}
+.dropdown-content a{ color: #333; padding: 8px 12px; text-decoration: none; display: block; border-bottom: 1px solid #f1f1f1; cursor:pointer;}
+.dropdown-content a:hover{ background-color: #f1f1f1;}
+/* Modal Styles */
+.modal{ display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background-color: rgba(0,0,0,0.5);}
+.modal-content{ background:white; margin:10% auto; padding:30px; border-radius:10px; width:400px; box-shadow:0px 10px 25px rgba(0,0,0,0.3); position:relative;}
+.modal-content h2{ text-align:center; color:#4e73df; margin-bottom:20px;}
+.modal-content input, .modal-content select{ width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;}
+.modal-content button{ width:100%; padding:12px; background:#1cc88a; border:none; border-radius:5px; color:white; font-size:16px; cursor:pointer; margin-top:10px;}
+.modal-content button:hover{ background:#17a673;}
+.close{ position:absolute; top:15px; right:20px; font-size:24px; font-weight:bold; color:#333; cursor:pointer;}
+.modal-delete button{ background:#e74a3b;}
+.modal-delete button:hover{ background:#c0392b;}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+<h2>Library</h2>
+<a href="/dashboard">Dashboard</a>
+<a href="/users">User Management</a>
+<a href="/books">Books</a>
+<!--<a href="#">Borrow Books</a>-->
+{% if current_user.role == "Admin" %}
+<a href="/reports">Reports</a>
+{% endif %}
+</div>
+
+<div class="topbar">
+<div>Welcome <b>{{name}}</b></div>
+<div><a class="logout-btn" href="/logout">Logout</a></div>
+</div>
+
+<div class="content">
+<h2>Library Books</h2>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="openTab(this,'available')">Available Books</button>
+  <button class="tab-btn" onclick="openTab(this,'borrowed')">Borrowed Books</button>
+</div>
+
+<!-- Available Books -->
+<div id="available">
+
+
+{% if current_user.role == 'Admin' %}
+    <span class="add-btn" id="openModal">+ Add New User</span>
+{% endif %}
+
+<table>
+<tr>
+<th>Title</th>
+<th>Author</th>
+<th>Category</th>
+<th>Year</th>
+<th>ISBN</th>
+<th>Copies</th>
+<th>Borrowed</th>
+<th>Actions</th>
+</tr>
+{% for book in books %}
+<tr>
+<td>{{book.title}}</td>
+<td>{{book.author}}</td>
+<td>{{book.category}}</td>
+<td>{{book.year}}</td>
+<td>{{book.isbn}}</td>
+<td>{{book.copies}}</td>
+<td>{{book.borrowed}}</td>
+<td>
+<div class="dropdown">
+<button class="dropbtn" onclick="toggleDropdown(event)">Options</button>
+<div class="dropdown-content">
+<a href="javascript:void(0);" onclick="viewBook('{{book.id}}','{{book.title}}','{{book.author}}','{{book.category}}','{{book.year}}','{{book.isbn}}','{{book.copies}}','{{book.borrowed}}')">View</a>
+<a href="javascript:void(0);" onclick="openBorrowModal('{{book.id}}','{{book.title}}')">Borrow</a>
+<a href="javascript:void(0);" onclick="openEditModal('{{book.id}}','{{book.title}}','{{book.author}}','{{book.category}}','{{book.year}}','{{book.isbn}}','{{book.copies}}')">Edit</a>
+<a href="javascript:void(0);" onclick="openDeleteModal('{{book.id}}','{{book.title}}')">Delete</a>
+</div>
+</div>
+</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+<!-- Borrowed Books -->
+<div id="borrowed" style="display:none;">
+<table>
+<tr>
+<th>Book Title</th>
+<th>Borrower</th>
+<th>Borrow Date</th>
+<th>Actions</th>
+</tr>
+{% for b in borrowed_books %}
+<tr>
+<td>{{ b.book.title }}</td>
+<td>{{ b.user.name }}</td>
+<td>{{ b.borrow_date }}</td>
+<td>
+  <form method="POST" action="/books/return/{{b.id}}" style="display:inline;">
+    <button type="submit" style="padding:5px 10px; background:#e74a3b; color:white; border:none; border-radius:5px; cursor:pointer;">Return</button>
+  </form>
+</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+<!-- MODALS: Add/Edit/Delete/View/Borrow -->
+
+<!-- Add Modal -->
+<div id="bookModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeModal">&times;</span>
+    <h2>Add New Book</h2>
+    <form id="addBookForm" method="POST" action="/books/add">
+      <input type="text" name="title" placeholder="Book Title" required>
+      <input type="text" name="author" placeholder="Author" required>
+      <input type="text" name="category" placeholder="Category" required>
+      <input type="number" name="year" placeholder="Year" required>
+      <input type="text" name="isbn" placeholder="ISBN" required>
+      <input type="number" name="copies" placeholder="Number of Copies" required>
+      <button type="submit">Add Book</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeEditModal">&times;</span>
+    <h2>Edit Book</h2>
+    <form id="editBookForm" method="POST">
+      <input type="hidden" name="id" id="editId">
+      <input type="text" name="title" id="editTitle" placeholder="Book Title" required>
+      <input type="text" name="author" id="editAuthor" placeholder="Author" required>
+      <input type="text" name="category" id="editCategory" placeholder="Category" required>
+      <input type="number" name="year" id="editYear" placeholder="Year" required>
+      <input type="text" name="isbn" id="editIsbn" placeholder="ISBN" required>
+      <input type="number" name="copies" id="editCopies" placeholder="Copies" required>
+      <button type="submit">Update Book</button>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeDeleteModal">&times;</span>
+    <h2>Delete Book</h2>
+    <p id="deleteMessage"></p>
+    <form id="deleteBookForm" method="POST">
+        <input type="hidden" name="id" id="deleteId">
+        <button type="submit" style="background:#e74a3b;">Delete</button>
+    </form>
+  </div>
+</div>
+
+<!-- View Modal -->
+<div id="viewModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeViewModal">&times;</span>
+    <h2>Book Details</h2>
+    <p><strong>Title:</strong> <span id="viewTitle"></span></p>
+    <p><strong>Author:</strong> <span id="viewAuthor"></span></p>
+    <p><strong>Category:</strong> <span id="viewCategory"></span></p>
+    <p><strong>Year:</strong> <span id="viewYear"></span></p>
+    <p><strong>ISBN:</strong> <span id="viewIsbn"></span></p>
+    <p><strong>Copies:</strong> <span id="viewCopies"></span></p>
+    <p><strong>Borrowed:</strong> <span id="viewBorrowed"></span></p>
+  </div>
+</div>
+
+<!-- Borrow Modal -->
+<div id="borrowModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeBorrowModal">&times;</span>
+    <h2>Borrow Book</h2>
+    <form id="borrowBookForm" method="POST" action="/books/borrow">
+        <input type="hidden" name="id" id="borrowId">
+        <p>Borrowing: <strong id="borrowTitle"></strong></p>
+        <label for="borrower">Borrower Name:</label>
+        <input type="text" name="borrower" id="borrower" placeholder="Enter borrower's name" required>
+        <label for="borrowDate">Borrow Date:</label>
+        <input type="date" name="borrow_date" id="borrowDate" required>
+        <button type="submit" style="background:#1cc88a;">Borrow</button>
+    </form>
+  </div>
+</div>
+
+<script>
+// ------------------- TAB FUNCTION -------------------
+function openTab(btn, tab) {
+  document.getElementById('available').style.display = (tab==='available') ? 'block':'none';
+  document.getElementById('borrowed').style.display = (tab==='borrowed') ? 'block':'none';
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ------------------- MODAL FUNCTIONS -------------------
+const addModal = document.getElementById('bookModal');
+document.getElementById('openModal').onclick = () => addModal.style.display='block';
+document.getElementById('closeModal').onclick = () => addModal.style.display='none';
+
+const editModal = document.getElementById('editModal');
+function openEditModal(id,title,author,category,year,isbn,copies){
+  document.getElementById('editId').value=id;
+  document.getElementById('editTitle').value=title;
+  document.getElementById('editAuthor').value=author;
+  document.getElementById('editCategory').value=category;
+  document.getElementById('editYear').value=year;
+  document.getElementById('editIsbn').value=isbn;
+  document.getElementById('editCopies').value=copies;
+  document.getElementById('editBookForm').action=`/books/edit/${id}`;
+  editModal.style.display='block';
+}
+document.getElementById('closeEditModal').onclick = () => editModal.style.display='none';
+
+const deleteModal = document.getElementById('deleteModal');
+function openDeleteModal(id,title){
+  document.getElementById('deleteId').value=id;
+  document.getElementById('deleteMessage').innerText=`Are you sure you want to delete '${title}'?`;
+  document.getElementById('deleteBookForm').action=`/books/delete/${id}`;
+  deleteModal.style.display='block';
+}
+document.getElementById('closeDeleteModal').onclick = () => deleteModal.style.display='none';
+
+const viewModal = document.getElementById('viewModal');
+function viewBook(id,title,author,category,year,isbn,copies,borrowed){
+  document.getElementById('viewTitle').innerText=title;
+  document.getElementById('viewAuthor').innerText=author;
+  document.getElementById('viewCategory').innerText=category;
+  document.getElementById('viewYear').innerText=year;
+  document.getElementById('viewIsbn').innerText=isbn;
+  document.getElementById('viewCopies').innerText=copies;
+  document.getElementById('viewBorrowed').innerText=borrowed;
+  viewModal.style.display='block';
+}
+document.getElementById('closeViewModal').onclick = () => viewModal.style.display='none';
+
+const borrowModal = document.getElementById('borrowModal');
+function openBorrowModal(id,title){
+  document.getElementById('borrowId').value=id;
+  document.getElementById('borrowTitle').innerText=title;
+  borrowModal.style.display='block';
+}
+document.getElementById('closeBorrowModal').onclick = () => borrowModal.style.display='none';
+
+// ------------------- CLOSE MODALS ON OUTSIDE CLICK -------------------
+window.onclick = function(event){
+  [addModal,editModal,deleteModal,viewModal,borrowModal].forEach(mod=>{
+    if(event.target==mod) mod.style.display='none';
+  });
+}
+
+// ------------------- DROPDOWN CONTROL -------------------
+function toggleDropdown(event){
+  event.stopPropagation();
+  const dropdown = event.currentTarget.nextElementSibling;
+  document.querySelectorAll('.dropdown-content').forEach(dd=>{if(dd!==dropdown) dd.style.display='none';});
+  dropdown.style.display = dropdown.style.display==='block'?'none':'block';
+}
+window.addEventListener('click',()=>{document.querySelectorAll('.dropdown-content').forEach(dd=>dd.style.display='none');});
+</script>
+</body>
+</html>

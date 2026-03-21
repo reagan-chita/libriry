@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Library Dashboard</title>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#f4f6f9;
+}
+
+/* Sidebar */
+.sidebar{
+    width:220px;
+    height:100vh;
+    background:#4e73df;
+    position:fixed;
+    color:white;
+    padding-top:20px;
+}
+.sidebar h2{text-align:center;margin-bottom:30px;}
+.sidebar a{display:block;color:white;padding:12px 20px;text-decoration:none;}
+.sidebar a:hover{background:#2e59d9;}
+
+/* Top bar */
+.topbar{
+    margin-left:220px;
+    background:white;
+    padding:15px 30px;
+    box-shadow:0 2px 5px rgba(0,0,0,0.1);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+/* Logout button */
+.logout-btn{
+    background:#e74a3b;
+    color:white;
+    padding:8px 15px;
+    text-decoration:none;
+    border-radius:5px;
+}
+.logout-btn:hover{background:#c0392b;}
+
+/* Main content */
+.content{
+    margin-left:220px;
+    padding:30px;
+}
+
+/* Dashboard cards */
+.cards{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-bottom:30px;
+}
+.card{
+    flex:1;
+    min-width:200px;
+    background:white;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 5px 10px rgba(0,0,0,0.1);
+    text-align:center;
+}
+.card h3{
+    margin:10px 0;
+    font-size:24px;
+    color:#4e73df;
+}
+.card p{color:#555;margin:0;}
+
+/* Chart container */
+.chart-container{
+    background:white;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 5px 10px rgba(0,0,0,0.1);
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+<h2>Library</h2>
+<a href="/dashboard">Dashboard</a>
+<a href="/users">User Management</a>
+<a href="/books">Books</a>
+<!--<a href="#">Borrow Books</a>-->
+{% if current_user.role == "Admin" %}
+<a href="/reports">Reports</a>
+{% endif %}
+</div>
+
+<div class="topbar">
+<div>Welcome <b>{{name}}</b></div>
+<div><a class="logout-btn" href="/logout">Logout</a></div>
+</div>
+
+<div class="content">
+<h2>Library Dashboard</h2>
+
+<!-- Cards -->
+<div class="cards">
+    <div class="card">
+        <h3>{{total_books}}</h3>
+        <p>Total Books</p>
+    </div>
+    <div class="card">
+        <h3>{{borrowed_books}}</h3>
+        <p>Borrowed Books</p>
+    </div>
+   {% if current_user.role == "Admin" %}
+    <div class="card">
+        <h3>{{total_users}}</h3>
+        <p>Total Users</p>
+    </div>
+    {% endif %}
+    <div class="card">
+        <h3>{{available_books}}</h3>
+        <p>Available Books</p>
+    </div>
+</div>
+
+<!-- Chart -->
+<div class="chart-container">
+    <canvas id="bookChart" height="100"></canvas>
+</div>
+
+</div>
+
+<script>
+const ctx = document.getElementById('bookChart').getContext('2d');
+const bookChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Total Books', 'Borrowed', 'Available'],
+        datasets: [{
+            label: 'Books Statistics',
+            data: [{{total_books}}, {{borrowed_books}}, {{available_books}}],
+            backgroundColor: ['#4e73df', '#1cc88a', '#f6c23e']
+        }]
+    },
+    options: {
+        responsive:true,
+        plugins:{legend:{ display:false }},
+        scales:{ y:{ beginAtZero:true }}
+    }
+});
+</script>
+
+</body>
+</html>

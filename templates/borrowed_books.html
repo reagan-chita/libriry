@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Borrowed Books - Library System</title>
+<style>
+body { font-family: Arial, sans-serif; background:#f4f6f9; margin:0; padding:30px; }
+table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow:0 5px 10px rgba(0,0,0,0.1);}
+th, td { padding:12px; border-bottom:1px solid #ddd; text-align:left; }
+th { background:#4e73df; color:white; }
+tr:hover { background:#f1f1f1; }
+</style>
+</head>
+<body>
+<h2>Borrowed Books</h2>
+<table>
+<tr>
+    <th>Book Title</th>
+    <th>Borrower</th>
+    <th>Borrow Date</th>
+</tr>
+{% for b in borrowed_list %}
+<tr>
+    <td>{{b.title}}</td>
+    <td>{{b.borrower}}</td>
+    <td>{{b.borrow_date}}</td>
+</tr>
+{% endfor %}
+</table>
+</body>
+</html>
