@@ -7,7 +7,7 @@ from flask_login import LoginManager, login_user, logout_user, current_user, log
 
 import os
 
-
+print("test deploy")  # 👈 add here
 # ------------------- APP SETUP -------------------
 app = Flask(__name__)
 app.secret_key = "secret123"
